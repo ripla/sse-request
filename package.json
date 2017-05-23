@@ -1,0 +1,17 @@
+{
+  "name": "sse-request",
+  "version": "1.0.0",
+  "description": "Simple Polymer wrapper around an EventSource for Server Sent Events.",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Risto Yrjänä",
+  "license": "MIT",
+  "dependencies": {
+    "sse": "0.0.6"
+  }
+}

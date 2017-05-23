@@ -1,0 +1,110 @@
+<link rel="import" href="../polymer/polymer-element.html">
+
+<dom-module id="sse-request">
+
+  <template></template>
+  <script>
+    /**
+     * `sse-request`
+     * Simple Polymer wrapper around an EventSource for Server Sent Events.
+     *
+     * @customElement
+     * @polymer
+     * @demo demo/index.html
+     */
+    class SseRequest extends Polymer.Element {
+      static get is() { return 'sse-request'; }
+      static get properties() {
+        return {
+          url: String,
+          auto: {
+            type: Boolean,
+            value: false
+            },
+          sourceObject: Object,
+          readyState: Object,
+          // messageBuffer: Array,
+          messageBuffer: {
+            type: Array,
+            value: function(){ return []; },
+            readOnly: true,
+            notify: true
+          },
+          holdData: {
+            type: Boolean,
+            value: false
+          }
+        };
+      }
+
+      connectedCallback() {
+        if(this.auto) {
+          this.start();
+        }
+      }
+
+      start() {
+        if(!this.url){
+          console.log("No URL defined for sse-request");
+          return;
+        }
+
+        this.sourceObject = new EventSource(this.url);
+        this.sourceObject.onmessage = this._handleMessage.bind(this);
+        this.sourceObject.onerror = this._handleError.bind(this);
+        this.sourceObject.onopen = this._handleOpen.bind(this);
+      }
+
+      close() {
+        if(this.sourceObject) {
+          this.sourceObject.close();
+        }
+      }
+
+      readyState() {
+        if(this.sourceObject) {
+          if(this.sourceObject.readyState == 0) {
+            return SseRequest.READYSTATE_CONNECTING;
+
+          }else if(this.sourceObject.readyState == 1) {
+            return SseRequest.READYSTATE_OPEN;
+
+          }else if(this.sourceObject.readyState == 2) {
+            return SseRequest.READYSTATE_CLOSED;
+          }
+        }
+      }
+
+      _handleMessage(event) {
+        if(this.holdData) {
+          this.push('messageBuffer', event);
+        }
+        const eventOptions = this._defaultMessageOptions();
+        eventOptions.detail = {message:event.data};
+        this.dispatchEvent(new CustomEvent('sse-message', eventOptions));
+      }
+
+      _handleError(event) {
+        const eventOptions = this._defaultMessageOptions();
+        this.dispatchEvent(new CustomEvent('sse-error', eventOptions));
+      }
+
+      _handleOpen(event) {
+        const eventOptions = this._defaultMessageOptions();
+        this.dispatchEvent(new CustomEvent('sse-open', eventOptions));
+      }
+
+      _defaultMessageOptions() {
+        return {
+          bubbles: false
+        };
+      }
+    }
+
+    SseRequest.READYSTATE_CONNECTING = Symbol.for('ReadyState_Connecting');
+    SseRequest.READYSTATE_CLOSED = Symbol.for('ReadyState_Closed');
+    SseRequest.READYSTATE_OPEN = Symbol.for('ReadyState_Open');
+
+    window.customElements.define(SseRequest.is, SseRequest);
+  </script>
+</dom-module>
